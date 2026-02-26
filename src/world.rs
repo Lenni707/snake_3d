@@ -59,3 +59,5 @@ fn draw_grid_lines(mut gizmos: Gizmos, grid: Res<Grid>) {
     }
     
 }
+
+// ugfagfa
