@@ -12,7 +12,7 @@ impl Grid {
         Grid {
             dimensions: IVec3::new(20, 20, 20),
             origin: Vec3::new(0.0, 0.0, 0.0),
-            cell_size: 1.0
+            cell_size: 0.5
         }
     }
     pub fn in_bounds(&self, c: IVec3) -> bool {

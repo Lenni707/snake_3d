@@ -14,6 +14,7 @@ impl Plugin for SnakePlugin{
 #[derive(Component)]
 pub struct Snake {
     body: Vec<IVec3>,
+    dir: IVec3,
 }
 
 fn spawn_snake(
@@ -31,7 +32,16 @@ fn spawn_snake(
         MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
         Transform::from_xyz(world_pos.x, world_pos.y, world_pos.z),
         Snake {
-            body: vec![pos]
+            body: vec![pos],
+            dir: IVec3::ZERO
         }
     ));
+}
+
+fn move_snake(mut snake_q: Query<&mut Snake>, grid: Res<Grid>) {
+    for mut snake in &mut snake_q {
+        let new_head = snake.body[0] + snake.dir;
+        snake.body.insert(0, new_head);
+        snake.body.pop();
+    }
 }
