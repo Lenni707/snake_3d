@@ -7,9 +7,15 @@ pub struct SnakePlugin;
 
 impl Plugin for SnakePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_snake);
+        app
+            .insert_resource(MoveTimer(Timer::from_seconds(0.4, TimerMode::Repeating)))
+            .add_systems(Startup, spawn_snake)
+            .add_systems(Update, (move_snake, sync_transforms).chain());
     }
 }
+
+#[derive(Resource)]
+struct MoveTimer(Timer);
 
 #[derive(Component)]
 pub struct Snake {
@@ -65,20 +71,25 @@ fn spawn_snake(
         },
         PlayerCamera,
     ));
+
+    println!("snake spanwned");
 }
 
-fn move_snake(mut snake_q: Query<&mut Snake>, mut segment_q: Query<&mut SnakeSegment>) {
+fn move_snake(mut snake_q: Query<&mut Snake>, mut segment_q: Query<&mut SnakeSegment>, time: Res<Time>, mut timer: ResMut<MoveTimer>,) {
+    if !timer.0.tick(time.delta()).just_finished() { return; }
+
     let Ok(snake) = snake_q.single_mut() else {
         return;
     };
 
     for i in 1..snake.body.len() {
-        let next_pos = segment_q.get(snake.body[i + 1]).unwrap().pos;
+        let next_pos = segment_q.get(snake.body[i - 1]).unwrap().pos;
 
         segment_q.get_mut(snake.body[i]).unwrap().pos = next_pos;
     }
 
     let mut head = segment_q.get_mut(snake.body[0]).unwrap();
+    println!("snake moved");
     head.pos += snake.dir
 }
 
@@ -90,4 +101,8 @@ fn sync_transforms(
     for (seg, mut transform) in &mut q {
         transform.translation = grid.cell_to_world(seg.pos)
     }
+}
+
+fn add_segment() {
+    
 }

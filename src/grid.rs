@@ -7,10 +7,12 @@ pub struct Grid {
     pub cell_size: f32,
 }
 
+const GRID_SIZE: i32 = 10;
+
 impl Grid {
     pub fn new() -> Self {
         Grid {
-            dimensions: IVec3::new(20, 20, 20),
+            dimensions: IVec3::new(10, 10, 10),
             origin: Vec3::new(0.0, 0.0, 0.0),
             cell_size: 0.5,
         }
