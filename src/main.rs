@@ -5,6 +5,7 @@ mod camera;
 mod grid;
 mod snake;
 mod world;
+mod controls;
 
 use crate::camera::CameraPlugin;
 use crate::grid::Grid;

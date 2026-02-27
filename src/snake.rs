@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::camera::PlayerCamera;
 use crate::grid::Grid;
+use crate::controls::Direction;
 
 pub struct SnakePlugin;
 
@@ -20,7 +21,7 @@ struct MoveTimer(Timer);
 #[derive(Component)]
 pub struct Snake {
     body: Vec<Entity>,
-    dir: IVec3,
+    pub dir: Direction
 }
 
 #[derive(Component)]
@@ -67,7 +68,7 @@ fn spawn_snake(
         Snake {
             // whole snake (owns the data)
             body: vec![head, tail],
-            dir: IVec3::X,
+            dir: Direction::Right,
         },
         PlayerCamera,
     ));
@@ -82,6 +83,12 @@ fn move_snake(mut snake_q: Query<&mut Snake>, mut segment_q: Query<&mut SnakeSeg
         return;
     };
 
+    let dir = match snake.dir { // OK crazy todo vielleicht hier oder in controlss, das direction enum in IVec3 übersetzen, dabei z und x beachten das die ja varrieren können
+        Direction::Up => { IVec3::new(0, 1, 0)},
+        Direction::Down => { IVec3::new(0, -1, 0) },
+        _ => todo!()
+    };
+
     for i in 1..snake.body.len() {
         let next_pos = segment_q.get(snake.body[i - 1]).unwrap().pos;
 
@@ -90,7 +97,7 @@ fn move_snake(mut snake_q: Query<&mut Snake>, mut segment_q: Query<&mut SnakeSeg
 
     let mut head = segment_q.get_mut(snake.body[0]).unwrap();
     println!("snake moved pos: {}", head.pos);
-    head.pos += snake.dir
+    head.pos += dir
 }
 
 fn sync_transforms(
@@ -103,6 +110,23 @@ fn sync_transforms(
     }
 }
 
-fn add_segment() {
-    
+pub fn add_segment(
+    snake: &mut Snake,
+    segment_q: &Query<&SnakeSegment>,
+    cmd: &mut Commands,
+    mesh: Handle<Mesh>,
+    material: Handle<StandardMaterial>,
+    grid: &Grid,
+) {
+    let tail_entity = *snake.body.last().unwrap();
+    let tail_pos = segment_q.get(tail_entity).unwrap().pos; // neues egment spawnt einfach in der letzten reihe weil es dann eh geupdated wird
+
+    let new_segment = cmd.spawn((
+        Mesh3d(mesh),
+        MeshMaterial3d(material),
+        Transform::from_translation(grid.cell_to_world(tail_pos)),
+        SnakeSegment { pos: tail_pos },
+    )).id();
+
+    snake.body.push(new_segment);
 }

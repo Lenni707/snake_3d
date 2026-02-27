@@ -18,8 +18,8 @@ fn spawn_ground(
 ) {
     let grid_dims = grid.dimensions.as_vec3();
     cmd.spawn((
-        Mesh3d(meshes.add(Circle::new(15.0))),
-        MeshMaterial3d(materials.add(Color::WHITE)),
+        Mesh3d(meshes.add(Circle::new(grid.size as f32 * 1.5))),
+        MeshMaterial3d(materials.add(Color::srgb_u8(144, 255, 100))),
         Transform::from_isometry(Isometry3d::new(Vec3::new(grid_dims.x * 0.25, grid.origin.y, grid_dims.z * 0.25), Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)))
     ));
 }
@@ -41,10 +41,10 @@ fn draw_grid_lines(mut gizmos: Gizmos, grid: Res<Grid>) {
     let pos = Vec3::new(grid.origin.x, grid.origin.y, grid.origin.z) + grid.dimensions.as_vec3() * 0.25;
     gizmos.grid_3d(
         Isometry3d::new(pos, Quat::from_rotation_x(0.)),
-        UVec3::splat(grid.dimensions.x as u32),
+        UVec3::splat(grid.size as u32),
         Vec3::splat(grid.cell_size),
         // Light gray
-        LinearRgba::gray(0.1),
+        LinearRgba::gray(0.3),
     );
     
 }
