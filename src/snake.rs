@@ -34,8 +34,8 @@ fn spawn_snake(
     mut materials: ResMut<Assets<StandardMaterial>>,
     grid: Res<Grid>,
 ) {
-    let head_pos = IVec3::new(0, 0, 0);
-    let tail_pos = IVec3::new(-1, 0, 0);
+    let head_pos = IVec3::new(1, 0, 2);
+    let tail_pos = IVec3::new(0, 0, 2);
 
     let head_mesh = meshes.add(Cuboid::from_size(Vec3::splat(grid.cell_size * 0.9)));
     let body_mesh = meshes.add(Cuboid::from_size(Vec3::splat(grid.cell_size * 0.85)));
@@ -89,7 +89,7 @@ fn move_snake(mut snake_q: Query<&mut Snake>, mut segment_q: Query<&mut SnakeSeg
     }
 
     let mut head = segment_q.get_mut(snake.body[0]).unwrap();
-    println!("snake moved");
+    println!("snake moved pos: {}", head.pos);
     head.pos += snake.dir
 }
 
