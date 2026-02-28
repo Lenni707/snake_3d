@@ -141,3 +141,17 @@ pub fn add_segment(
 
     println!("segment added");
 }
+
+// -- SHIT FOR APPLES --
+
+#[derive(Component)]
+pub struct Food;
+
+fn spawn_food(
+    mut cmd: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    grid: Res<Grid>,
+) {
+    
+}

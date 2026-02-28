@@ -39,14 +39,20 @@ fn setup_lighting(mut commands: Commands) {
 
 fn draw_grid_lines(mut gizmos: Gizmos, grid: Res<Grid>) {
     let pos = Vec3::new(grid.origin.x, grid.origin.y, grid.origin.z) + grid.dimensions.as_vec3() * 0.25;
-    gizmos.grid_3d(
-        Isometry3d::new(pos, Quat::from_rotation_x(0.)),
-        UVec3::splat(grid.size as u32),
-        Vec3::splat(grid.cell_size),
-        // Light gray
-        LinearRgba::gray(0.3),
+    // gizmos.grid_3d(
+    //     Isometry3d::new(pos, Quat::IDENTITY),
+    //     UVec3::splat(grid.size as u32),
+    //     Vec3::splat(grid.cell_size),
+    //     LinearRgba::gray(0.3),
+    // );
+
+    let cube_size = grid.size as f32 * grid.cell_size;
+    gizmos.primitive_3d(
+        &Cuboid::new(cube_size, cube_size, cube_size),
+        Isometry3d::new(pos, Quat::IDENTITY),
+        LinearRgba::RED,
     );
-    
 }
 
 // ugfagfa
+
