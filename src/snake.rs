@@ -21,12 +21,19 @@ struct MoveTimer(Timer);
 #[derive(Component)]
 pub struct Snake {
     body: Vec<Entity>,
-    pub dir: Direction
+    pub dir: Direction,
+    pub last_horizontal_dir: Direction,
 }
 
 #[derive(Component)]
 pub struct SnakeSegment {
     pos: IVec3,
+}
+
+#[derive(Resource)]
+pub struct SnakeAssets {
+    pub mesh: Handle<Mesh>,
+    pub material: Handle<StandardMaterial>,
 }
 
 fn spawn_snake(
@@ -41,7 +48,7 @@ fn spawn_snake(
     let head_mesh = meshes.add(Cuboid::from_size(Vec3::splat(grid.cell_size * 0.9)));
     let body_mesh = meshes.add(Cuboid::from_size(Vec3::splat(grid.cell_size * 0.85)));
 
-    let head_mat = materials.add(Color::srgb_u8(255, 220, 50));
+    let head_mat = materials.add(Color::srgb_u8(255, 0, 0));
     let body_mat = materials.add(Color::srgb_u8(255, 220, 50));
 
     let head = cmd
@@ -57,8 +64,8 @@ fn spawn_snake(
     let tail = cmd
         .spawn((
             // body
-            Mesh3d(body_mesh),
-            MeshMaterial3d(body_mat),
+            Mesh3d(body_mesh.clone()), // handles kann man einfach clonen ist ez
+            MeshMaterial3d(body_mat.clone()),
             Transform::from_translation(grid.cell_to_world(tail_pos)),
             SnakeSegment { pos: tail_pos },
         ))
@@ -69,9 +76,15 @@ fn spawn_snake(
             // whole snake (owns the data)
             body: vec![head, tail],
             dir: Direction::Right,
+            last_horizontal_dir: Direction::Right,
         },
         PlayerCamera,
     ));
+
+    cmd.insert_resource(SnakeAssets {
+        mesh: body_mesh,
+        material: body_mat,
+    });
 
     println!("snake spanwned");
 }
@@ -83,13 +96,9 @@ fn move_snake(mut snake_q: Query<&mut Snake>, mut segment_q: Query<&mut SnakeSeg
         return;
     };
 
-    let dir = match snake.dir { // OK crazy todo vielleicht hier oder in controlss, das direction enum in IVec3 übersetzen, dabei z und x beachten das die ja varrieren können
-        Direction::Up => { IVec3::new(0, 1, 0)},
-        Direction::Down => { IVec3::new(0, -1, 0) },
-        _ => todo!()
-    };
+    let dir = snake.dir.to_ivec3();
 
-    for i in 1..snake.body.len() {
+    for i in (1..snake.body.len()).rev() {
         let next_pos = segment_q.get(snake.body[i - 1]).unwrap().pos;
 
         segment_q.get_mut(snake.body[i]).unwrap().pos = next_pos;
@@ -129,4 +138,6 @@ pub fn add_segment(
     )).id();
 
     snake.body.push(new_segment);
+
+    println!("segment added");
 }
