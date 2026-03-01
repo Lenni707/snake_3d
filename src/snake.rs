@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use rand::random_range;
 
 use crate::camera::PlayerCamera;
 use crate::grid::Grid;
@@ -10,8 +11,8 @@ impl Plugin for SnakePlugin {
     fn build(&self, app: &mut App) {
         app
             .insert_resource(MoveTimer(Timer::from_seconds(0.4, TimerMode::Repeating)))
-            .add_systems(Startup, spawn_snake)
-            .add_systems(Update, (move_snake, sync_transforms).chain());
+            .add_systems(Startup, (spawn_snake, spawn_food))
+            .add_systems(Update, (move_snake, sync_transforms, eat_food).chain());
     }
 }
 
@@ -23,6 +24,7 @@ pub struct Snake {
     body: Vec<Entity>,
     pub dir: Direction,
     pub last_horizontal_dir: Direction,
+    pub score: u32,
 }
 
 #[derive(Component)]
@@ -36,7 +38,7 @@ pub struct SnakeAssets {
     pub material: Handle<StandardMaterial>,
 }
 
-fn spawn_snake(
+pub fn spawn_snake(
     mut cmd: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -48,7 +50,7 @@ fn spawn_snake(
     let head_mesh = meshes.add(Cuboid::from_size(Vec3::splat(grid.cell_size * 0.9)));
     let body_mesh = meshes.add(Cuboid::from_size(Vec3::splat(grid.cell_size * 0.85)));
 
-    let head_mat = materials.add(Color::srgb_u8(255, 0, 0));
+    let head_mat = materials.add(Color::srgb_u8(255, 165, 0));
     let body_mat = materials.add(Color::srgb_u8(255, 220, 50));
 
     let head = cmd
@@ -77,6 +79,7 @@ fn spawn_snake(
             body: vec![head, tail],
             dir: Direction::Right,
             last_horizontal_dir: Direction::Right,
+            score: 0
         },
         PlayerCamera,
     ));
@@ -143,15 +146,56 @@ pub fn add_segment(
 }
 
 // -- SHIT FOR APPLES --
-
 #[derive(Component)]
 pub struct Food;
 
-fn spawn_food(
+pub fn spawn_food(
     mut cmd: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     grid: Res<Grid>,
 ) {
-    
+    let apple_pos = IVec3::new(
+        random_range(grid.origin.x as i32..grid.size),
+        random_range(grid.origin.y as i32..grid.size),
+        random_range(grid.origin.z as i32..grid.size),
+    );
+    let apple_mesh = meshes.add(Cuboid::from_size(Vec3::splat(grid.cell_size * 0.9)));
+    let apple_mat = materials.add(Color::srgb_u8(255, 0, 0));
+
+    cmd.spawn((
+        Mesh3d(apple_mesh),
+        MeshMaterial3d(apple_mat),
+        Transform::from_translation(grid.cell_to_world(apple_pos)),
+        Food,
+    ));
+}
+
+fn eat_food(
+    mut snake_q: Query<&mut Snake>,
+    segment_q: Query<&SnakeSegment>,
+    mut cmd: Commands,
+    grid: Res<Grid>,
+    assets: Res<SnakeAssets>,
+    food_q: Query<(Entity, &Transform), With<Food>>,
+) {
+    let Ok(mut snake) = snake_q.single_mut() else { return };
+
+    let head_pos = segment_q.get(snake.body[0]).unwrap().pos;
+    let head_world = grid.cell_to_world(head_pos);
+
+    for (entity, transform) in food_q.iter() {
+        if transform.translation == head_world {
+            cmd.entity(entity).despawn();
+            add_segment(
+                &mut snake,
+                &segment_q,
+                &mut cmd,
+                assets.mesh.clone(),
+                assets.material.clone(),
+                &grid,
+            );
+            snake.score += 1;
+        }
+    }
 }

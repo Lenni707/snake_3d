@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::snake::{Snake, SnakeAssets, SnakeSegment, add_segment};
+use crate::snake::{Snake, SnakeAssets, SnakeSegment, add_segment, spawn_food, spawn_snake};
 use crate::grid::Grid;
 
 pub struct ControlPlugin;
@@ -79,14 +79,14 @@ fn steer_system(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut snake_q: Query<&mut Snake>,
 ) {
-    let Ok(mut snake) = snake_q.single_mut() else {
-        return;
-    };
+    let Ok(mut snake) = snake_q.single_mut() else { return };
+
+    let is_vertical = matches!(snake.dir, Direction::Up | Direction::Down);
 
     let new_dir = if keyboard.just_pressed(KeyCode::ArrowUp) {
-        Some(Direction::Up)
+        Some(if is_vertical { snake.last_horizontal_dir } else { Direction::Up })
     } else if keyboard.just_pressed(KeyCode::ArrowDown) {
-        Some(Direction::Down)
+        Some(if is_vertical { snake.last_horizontal_dir.opposite() } else { Direction::Down })
     } else if keyboard.just_pressed(KeyCode::ArrowLeft) {
         Some(snake.dir.turn_left(snake.last_horizontal_dir))
     } else if keyboard.just_pressed(KeyCode::ArrowRight) {
@@ -97,10 +97,8 @@ fn steer_system(
 
     if let Some(dir) = new_dir {
         if dir != snake.dir.opposite() {
-            // remember last horizontal dir before going vertical
-            match dir {
-                Direction::Up | Direction::Down => {}
-                _ => snake.last_horizontal_dir = dir,
+            if !matches!(dir, Direction::Up | Direction::Down) {
+                snake.last_horizontal_dir = dir;
             }
             snake.dir = dir;
         }
@@ -113,22 +111,27 @@ fn handle_input(
     segment_q: Query<&SnakeSegment>,
     mut cmd: Commands,
     grid: Res<Grid>,
-    assets: Res<SnakeAssets>
+    assets: Res<SnakeAssets>,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    if !keyboard.just_pressed(KeyCode::KeyX) {
-        return;
-    }
-
     let Ok(mut snake) = snake_q.single_mut() else {
-        return;
+            return;
     };
-
-    add_segment(
-        &mut snake,
-        &segment_q,
-        &mut cmd,
-        assets.mesh.clone(),
-        assets.material.clone(),
-        &grid,
-    );
+    if keyboard.just_pressed(KeyCode::KeyX) {
+        add_segment(
+            &mut snake,
+            &segment_q,
+            &mut cmd,
+            assets.mesh.clone(),
+            assets.material.clone(),
+            &grid,
+        );
+    }
+    if keyboard.just_pressed(KeyCode::KeyR) {
+        spawn_snake(cmd, meshes, materials, grid);
+    }
+    // if keyboard.just_pressed(KeyCode::KeyE) {
+    //     spawn_food(cmd, meshes, materials, grid);
+    // }
 }

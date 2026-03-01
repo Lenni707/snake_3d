@@ -6,18 +6,20 @@ mod grid;
 mod snake;
 mod world;
 mod controls;
+mod ui;
 
 use crate::camera::CameraPlugin;
 use crate::grid::Grid;
 use crate::snake::SnakePlugin;
 use crate::world::WorldPlugin;
 use crate::controls::ControlPlugin;
+use crate::ui::UiPlugin;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .insert_resource(Grid::new())
         .add_plugins(PanOrbitCameraPlugin)
-        .add_plugins((SnakePlugin, CameraPlugin, WorldPlugin, ControlPlugin))
+        .add_plugins((SnakePlugin, CameraPlugin, WorldPlugin, ControlPlugin, UiPlugin))
         .run();
 }
