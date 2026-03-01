@@ -8,7 +8,7 @@ pub struct Grid {
     pub cell_size: f32,
 }
 
-const GRID_SIZE: i32 = 10;
+const GRID_SIZE: i32 = 15;
 
 impl Grid {
     pub fn new() -> Self {
@@ -20,12 +20,12 @@ impl Grid {
         }
     }
     pub fn in_bounds(&self, c: IVec3) -> bool {
-        c.x < self.dimensions.x
+        c.x >= self.origin.x as i32
+            && c.y >= self.origin.y as i32
+            && c.z >= self.origin.z as i32
+            && c.x < self.dimensions.x
             && c.y < self.dimensions.y
             && c.z < self.dimensions.z
-            && c.x > self.origin.x as i32
-            && c.y > self.origin.y as i32
-            && c.z > self.origin.z as i32
     }
     pub fn cell_to_world(&self, c: IVec3) -> Vec3 {
         // gets the center of each cell in the grid

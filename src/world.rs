@@ -39,7 +39,7 @@ fn setup_lighting(mut commands: Commands) {
 
 fn draw_grid_lines(mut gizmos: Gizmos, grid: Res<Grid>) {
     let pos = Vec3::new(grid.origin.x, grid.origin.y, grid.origin.z) + grid.dimensions.as_vec3() * 0.25;
-    // gizmos.grid_3d(
+    // gizmos.grid_3d( // maaan das ist eigentlich so tuff aber es sieht halt einfach kacke aus
     //     Isometry3d::new(pos, Quat::IDENTITY),
     //     UVec3::splat(grid.size as u32),
     //     Vec3::splat(grid.cell_size),

@@ -12,7 +12,7 @@ impl Plugin for SnakePlugin {
         app
             .insert_resource(MoveTimer(Timer::from_seconds(0.4, TimerMode::Repeating)))
             .add_systems(Startup, (spawn_snake, spawn_food))
-            .add_systems(Update, (move_snake, sync_transforms, eat_food).chain());
+            .add_systems(Update, (move_snake, sync_transforms, eat_food, check_bounds_and_collision).chain());
     }
 }
 
@@ -197,5 +197,31 @@ fn eat_food(
             );
             snake.score += 1;
         }
+    }
+}
+
+fn check_bounds_and_collision(
+    mut cmd: Commands,
+    snake_q: Query<(Entity, &Snake)>,
+    segment_q: Query<&SnakeSegment>,
+    grid: Res<Grid>,
+) {
+    let Ok((snake_entity, snake)) = snake_q.single() else { return };
+
+    let head_pos = segment_q.get(snake.body[0]).unwrap().pos;
+
+    let dead = !grid.in_bounds(head_pos) || {
+        let positions: Vec<IVec3> = snake.body.iter()
+            .map(|e| segment_q.get(*e).unwrap().pos)
+            .collect();
+        positions[1..].contains(&positions[0])
+    };
+
+    if dead {
+        println!("snake dead");
+        for segment in &snake.body {
+            cmd.entity(*segment).despawn();
+        }
+        cmd.entity(snake_entity).despawn();
     }
 }
